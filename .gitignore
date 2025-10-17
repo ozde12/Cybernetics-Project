@@ -1,1 +1,10 @@
-__pycache__/\n*.pyc\n.env\n.venv\n*.pkl\n*.wav\n*.mp3\n/data/\n/models/
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.pkl
+*.wav
+*.mp3
+/data/
+/models/

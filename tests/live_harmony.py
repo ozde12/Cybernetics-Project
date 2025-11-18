@@ -25,7 +25,7 @@ FMAX = librosa.note_to_hz('C7')
 HP_CUTOFF = 100            # high-pass to reduce rumble
 RMS_GATE = 0.002           # ignore very quiet frames
 YIN_CONF_GATE = 0.65       # require decent yin confidence 0..1
-HARM_INTERVAL_SEMITONES = 4  # major third
+HARM_RATIO = 2 ** (4 /12.0) # major third as pure frequency ratio
 OUT_GAIN = 0.25
 
 NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
@@ -68,7 +68,7 @@ class HarmonyEngine:
             # output silence
             return np.zeros(nframes, dtype=np.float32)
 
-        f_harm = f0 * (2 ** (HARM_INTERVAL_SEMITONES/12.0))
+        f_harm = f0 * HARM_RATIO
         # phase-continuous oscillator
         t = (np.arange(nframes) / self.fs)
         omega = 2 * np.pi * f_harm / self.fs  # per-sample increment
@@ -96,8 +96,13 @@ class HarmonyEngine:
         note_name = hz_to_note_name(f0)
         if note_name is None: 
             return
+        
+        # just show frequencies, no snapping to named notes
+        if self.last_freq is None or abs(f0 - self.last_freq) / (self.last_freq + 1e-6) > 0.02:
+            self.last_freq = f0
+            print(f"🎶 f0 ≈ {f0:.1f} Hz | harmony ≈ {f0 * HARM_RATIO:.1f} Hz")
         # Only print when stable for a couple frames (reduce spam)
-        if self.display_note != note_name:
+        """if self.display_note != note_name:
             self.stable_counter += 1
             if self.stable_counter >= 2:
                 self.display_note = note_name
@@ -106,7 +111,7 @@ class HarmonyEngine:
                 harm_note = hz_to_note_name(f0 * (2 ** (HARM_INTERVAL_SEMITONES/12.0)))
                 print(f"🎶 Detected: {note_name}  |  Harmony: {harm_note}")
         else:
-            self.stable_counter = 0
+            self.stable_counter = 0"""
 
 
 def detect_f0_yin(chunk, sr=FS):

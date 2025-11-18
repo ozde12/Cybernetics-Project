@@ -25,7 +25,7 @@ FMAX = librosa.note_to_hz('C7')
 HP_CUTOFF = 100            # high-pass to reduce rumble
 RMS_GATE = 0.002           # ignore very quiet frames
 YIN_CONF_GATE = 0.65       # require decent yin confidence 0..1
-HARM_RATIO = 2 ** (4 /12.0) # major third as pure frequency ratio
+HARM_RATIO = 2 ** (3 /12.0) # minor third as pure frequency ratio
 OUT_GAIN = 0.25
 
 NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
@@ -148,7 +148,7 @@ def detect_f0_yin(chunk, sr=FS):
 
 def main():
     print("🎙️ Live Harmony: speak/sing/whistle near the mic. Press Ctrl+C to stop.")
-    print("   It will play a MAJOR THIRD above your detected note in real-time.\n")
+    print("   It will play a MINOR THIRD above your detected note in real-time.\n")
 
     # Pick default devices or set explicitly:
     # import sounddevice as sd; print(sd.query_devices()); sd.default.device = (input_idx, output_idx)

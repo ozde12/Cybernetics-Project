@@ -1,12 +1,3 @@
-"""
-BASE IMPLEMNTATION OF LIVE HARMONY, MAJOR IMPLEMENTATION
-Live Harmony Responder
-- Listens to microphone in real time
-- Detects dominant pitch (note) continuously
-- Plays back a MAJOR-THIRD harmony (4 semitones up) with low latency
-- Prints live note updates
-"""
-
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
@@ -25,7 +16,7 @@ FMAX = librosa.note_to_hz('C7')
 HP_CUTOFF = 100            # high-pass to reduce rumble
 RMS_GATE = 0.002           # ignore very quiet frames
 YIN_CONF_GATE = 0.65       # require decent yin confidence 0..1
-HARM_RATIO = 2 ** (4 /12.0) # major third as pure frequency ratio
+HARM_RATIO = 2 ** (3 /12.0) # minor third as pure frequency ratio
 OUT_GAIN = 0.25
 
 NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
@@ -144,54 +135,3 @@ def detect_f0_yin(chunk, sr=FS):
         return (f0_med if conf > 0 else None), conf
     except Exception:
         return None, 0.0
-
-
-def main():
-    print("🎙️ Live Harmony: speak/sing/whistle near the mic. Press Ctrl+C to stop.")
-    print("   It will play a MAJOR THIRD above your detected note in real-time.\n")
-
-    # Pick default devices or set explicitly:
-    # import sounddevice as sd; print(sd.query_devices()); sd.default.device = (input_idx, output_idx)
-
-    engine = HarmonyEngine(fs=FS, gain=OUT_GAIN)
-
-    def audio_callback(indata, outdata, frames, time_info, status):
-        if status:
-            # status overflow/underflow warnings etc.
-            # print(status)
-            pass
-
-        x = indata[:, 0].copy()  # mono
-        f0, conf = detect_f0_yin(x, sr=FS)
-
-        if f0 is not None and conf >= YIN_CONF_GATE:
-            engine.pretty_print_note(f0)
-            y = engine.synth_chunk(f0, frames)
-        else:
-            # no reliable pitch -> output silence
-            y = np.zeros(frames, dtype=np.float32)
-
-        outdata[:, 0] = y  # mono out
-        if outdata.shape[1] > 1:
-            outdata[:, 1] = y  # duplicate to right if stereo
-
-    try:
-        with sd.Stream(samplerate=FS,
-                       blocksize=BLOCK,
-                       dtype='float32',
-                       channels=1,            # mono in
-                       callback=audio_callback,
-                       latency='low',
-                       finished_callback=None):
-            print("✅ Stream started. Listening...")
-            print("   Tips: get close to the mic, sustain notes; watch the console for detected notes.")
-            while True:
-                sd.sleep(1000)
-    except KeyboardInterrupt:
-        print("\n🛑 Stopped by user.")
-    except Exception as e:
-        print("Error:", e)
-
-
-if __name__ == "__main__":
-    main()
